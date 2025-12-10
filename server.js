@@ -1,12 +1,11 @@
+// server.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import bodyParser from "body-parser";
-import db from "./models/db.js";
+import { getPool } from "./db.js"; // uses the pool above
+
+// your route imports (adjust paths if needed)
 import stepsRoutes from "./routes/steps.js";
-
-
-
 import authRoutes from "./routes/auth.js";
 import medicationRoutes from "./routes/medications.js";
 import symptomRoutes from "./routes/symptoms.js";
@@ -16,26 +15,35 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Middlewares
-app.use(cors());
-app.use(bodyParser.json());
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGIN || true,
+  credentials: true,
+}));
+app.use(express.json());
 
-db.connect((err) => {
-  if (err) {
-    console.error("❌ Database connection failed:", err.message);
-  } else {
-    console.log("✅ MySQL connected successfully!");
+// Simple health + DB test routes
+app.get("/", (req, res) => {
+  res.send("Healthcare backend is running!");
+});
+
+app.get("/api/db-test", async (req, res) => {
+  try {
+    const pool = getPool();
+    const [rows] = await pool.query("SELECT NOW() AS now");
+    return res.status(200).json({ ok: true, now: rows[0].now });
+  } catch (err) {
+    console.error("DB TEST ERROR:", err);
+    return res.status(500).json({ ok: false, error: err.message });
   }
 });
 
+// Mount your real routes (make sure each route uses getPool())
 app.use("/api/auth", authRoutes);
 app.use("/api/medication", medicationRoutes);
 app.use("/api/symptoms", symptomRoutes);
 app.use("/api/habits", habitRoutes);
 app.use("/api/steps", stepsRoutes);
-app.get("/", (req, res) => {
-  res.send("Healthcare backend is running!");
-});
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// IMPORTANT for Vercel: do NOT call app.listen()
+// Export the Express `app` as the default export so Vercel's Node runtime can call it.
+export default app;
