@@ -2,7 +2,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { getPool } from "./routes/db.js"; // uses the pool above
+import { getPool } from "./db.js"; // uses the pool above
 
 // your route imports (adjust paths if needed)
 import stepsRoutes from "./routes/steps.js";
