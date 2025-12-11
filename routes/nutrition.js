@@ -1,5 +1,5 @@
 import express from "express";
-import { getPool } from "../db.js";
+import { getPool } from "../models/db.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
